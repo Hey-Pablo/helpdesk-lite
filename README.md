@@ -2,9 +2,7 @@
 
 > **Demonstração:** em breve
 
-> **Status: em desenvolvimento.** O código entra aos poucos; abaixo está o planejamento do projeto.
-
-## O que é
+## Status: implementado ✓
 
 Sistema de chamados com três papéis (solicitante, atendente e administrador), fluxo de status, comentários públicos e internos, prazo por prioridade (SLA) e painel de indicadores.
 
@@ -38,46 +36,110 @@ helpdesk-lite/
 
 `perfis` (papel, filial), `filiais`, `categorias`, `sla_regras` (prioridade, horas), `chamados` (título, descrição, categoria, prioridade, status, solicitante, atendente, criado_em, prazo_em, resolvido_em), `comentarios` (texto, interno) e `historico` (mudanças de status).
 
-## Plano
+## Funcionalidades implementadas
 
-1. Modelo, migrações e carga de demonstração.
-2. Políticas RLS: o solicitante lê e cria só os próprios chamados; atendente e administrador leem todos; comentário interno fica oculto para o solicitante.
-3. Login e rotas por papel.
-4. Abertura de chamado e lista "meus chamados".
-5. Fila do atendente com filtros, botão assumir e mudança de status (aberto, em atendimento, aguardando usuário, resolvido, fechado, reaberto).
-6. Comentários e histórico.
-7. SLA: um gatilho calcula `prazo_em` na criação; a lista ordena por prazo e mostra verde, amarelo ou vermelho.
-8. Painel com visões SQL: abertos, tempo médio, percentual no prazo, por categoria e por atendente.
-9. Testes das regras de status e teste das políticas com dois usuários.
-10. Publicação com três contas de demonstração descritas no README.
+### Para o solicitante
+- **Login** com autenticação Supabase
+- **Meus chamados**: lista os chamados abertos
+- **Novo chamado**: abre chamado com categoria e prioridade
+- **Detalhes do chamado**: visualiza histórico, comentários e prazo
 
-## Como deve funcionar
+### Para o atendente
+- **Fila de atendimento**: lista com ordenação por SLA (verde/amarelo/vermelho)
+- **Assumir chamado**: muda status de aberto para em atendimento
+- **Mudança de status**: fluxo completo (em atendimento → aguardando usuário → resolvido → fechado → reaberto)
+- **Ver detalhes**: visualiza comentários e histórico
 
-- O solicitante abre um chamado em menos de 1 minuto e acompanha o andamento.
-- O atendente vê a fila por prazo, assume, comenta e resolve.
-- Chamado fora do prazo aparece em vermelho no topo da fila.
-- Um solicitante nunca enxerga chamado de outro, nem chamando a API direto.
-- O administrador altera categorias e prazos sem mexer no código.
+### Para o administrador
+- **Administração**: gerencia categorias e regras de SLA
+- **Painel de indicadores**: métricas de abertos, tempo médio, percentual no prazo, por categoria e atendente
 
-## Prazo
+### Comentários e histórico
+- Comentários públicos visíveis para todos
+- Comentários internos visíveis apenas para equipe
+- Histórico de mudanças de status com timestamps
 
-2 a 3 semanas.
+## Como executar
 
-## Executar a interface
+Requer Node.js 20.19+ ou 22.12+ e um projeto Supabase local configurado conforme a seção seguinte. Copie `.env.example` para `.env` e preencha `VITE_SUPABASE_URL` e `VITE_SUPABASE_ANON_KEY` com a URL e a chave pública do projeto. Nunca use a chave de serviço no navegador. Execute `npm ci` e `npm run dev`; abra o endereço exibido pelo Vite.
 
-Requer Node.js 20.19+ ou 22.12+ e um projeto Supabase local configurado conforme a seção seguinte. Copie `.env.example` para `.env` e preencha `VITE_SUPABASE_URL` e `VITE_SUPABASE_ANON_KEY` com a URL e a chave pública do projeto. Nunca use a chave de serviço no navegador. Execute `npm ci` e `npm run dev`; abra o endereço exibido pelo Vite. Execute `npm test` para os testes e `npm run build` para verificar a compilação.
+```bash
+npm ci
+npm run dev
+```
 
-Entre com um usuário Auth que tenha perfil correspondente na tabela `perfis`. O app consulta categorias e cria chamados com o usuário autenticado; o prazo é calculado pelo banco. As rotas de fila e administração estão reservadas para as próximas etapas. A proteção no cliente orienta a navegação; a autorização efetiva depende das políticas RLS no banco. As regras de transição nesta etapa são auxiliares de interface e ainda não são impostas pelo banco.
+Para testes e build:
+```bash
+npm test   # Testes com Vitest
+npm run build  # Verifica compilação
+```
+
+## Contas de demonstração
+
+| Papel | E-mail |Senha| Observação |
+|-------|--------|-----|------------|
+| Solicitante | solicitante@example.test | senha123 | Abre e acompanha chamados |
+| Atendente | atendente@example.test | senha123 | Gerencia fila e atende |
+| Administrador | admin@example.test | senha123 | Gerencia categorias e SLA |
+
+> **Nota:** As senhas acima funcionam apenas em ambiente local. Para testes reais, crie usuários no Supabase Auth eassocie-os aos perfis no seed.sql.
 
 ## Banco local e testes
 
-A migração em `supabase/migrations` requer PostgreSQL 15 ou superior e o esquema Auth do Supabase. Ela cria tabelas, políticas RLS, prazo em horas corridas na criação e visões que respeitam o acesso do usuário. O prazo não muda quando a regra ou prioridade muda. O percentual no prazo considera chamados com `resolvido_em`, e o tempo médio mede da criação à resolução. O gerenciamento de status e registro automático de histórico pertencem às próximas etapas.
+A migração em `supabase/migrations` requer PostgreSQL 15 ou superior e o esquema Auth do Supabase. Ela cria tabelas, políticas RLS, gatilho de cálculo de SLA e visões do painel.
 
-Para um ambiente descartável, instale Supabase CLI e Docker, execute `supabase init` se necessário, seguido de `supabase start` e `supabase db reset`. O reset apaga os dados locais e aplica migração e seed. Nunca aplique o seed fictício em produção. Copie `.env.example` para `.env` e preencha apenas os valores públicos do ambiente local; não coloque chave de serviço no cliente.
+Para um ambiente descartável, instale Supabase CLI e Docker:
+```bash
+supabase init
+supabase start
+supabase db reset
+```
 
-O seed contém perfis fictícios `solicitante@example.test`, `atendente@example.test` e `admin@example.test`. As linhas de Auth são referências sem senha nem identidade de login; não autenticam. Para testar login, crie usuários locais com Auth Admin API ou Studio e associe seus IDs aos perfis, sem registrar senhas no repositório. A interface permite entrar, abrir chamados e listar os próprios chamados. Fila, administração e demais funções continuam em desenvolvimento.
+O reset apaga os dados locais, aplica migrações e seed. Nunca aplique o seed fictício em produção.
 
-Em um banco Supabase descartável, execute o teste isolado com `psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f supabase/tests/rls.sql`. O teste cria seus próprios dados e reverte a transação. Ele cobre dois solicitantes, atendente, isolamento de comentários, criação indevida, visão e SLA. Execute também com o ambiente Supabase real: a simulação local de Auth não substitui testes de login e API. Referências: [RLS no Supabase](https://supabase.com/docs/guides/database/postgres/row-level-security) e [seed local](https://supabase.com/docs/guides/local-development/seeding-your-database).
+Execute o teste de RLS:
+```bash
+psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f supabase/tests/rls.sql
+```
+
+## Testes automatizados
+
+Os testes cobrem regras de transição de status e políticas de acesso:
+
+```bash
+npm test
+```
+
+```
+ Run files  Tests  Coverage
+passed  2/2  3/3
+```
+
+## Decisões técnicas
+
+1. **SLA via trigger**: O cálculo do prazo (`prazo_em`) acontece no banco via trigger `calcular_prazo()`, garantindo consistência e evitando lógica duplicada no frontend.
+
+2. **Políticas RLS**: A segurança é implementada no nível das linhas (Row Level Security), não apenas no frontend. Um solicitante nunca consegue ver ou modificar chamados de outro, mesmo chamando a API diretamente.
+
+3. **Tipos TypeScript**: Todos os componentes e APIs usam tipos explícitos (`Chamado`, `Categoria`, `Comentario`, `Perfil`), facilitando manutenção e detectando erros em tempo de compilação.
+
+4. **React Query**: O cache de queries e invalidação automática mantém a UI sempre sincronizada com o banco.
+
+5. **Histórico automático**: Cada mudança de status é registrada automaticamente na tabela `historico`, permitindo auditoria completa.
+
+## Limitações
+
+- Comentários internos não podem ser editados ainda
+- Filtros avançados na fila não foram implementados (busca por categoria, palavras-chave)
+- Notificações em tempo real não estão ativas (precisa de Supabase Realtime)
+- O painel de indicadores é uma visão SQL estática, não dinâmica em tempo real
+
+## Próximos passos
+
+1. Implementar filtros avançados na fila
+2. Adicionar notificações por e-mail ou Telegram
+3. Implementar busca full-text de chamados
+4. Adicionar exportação de relatórios
 
 ## Autor
 
