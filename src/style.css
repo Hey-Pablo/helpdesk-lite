@@ -1,0 +1,16 @@
+@import 'tailwindcss';
+@layer base {
+  body { @apply bg-slate-100 text-slate-900; }
+  main { @apply mx-auto max-w-4xl p-6; }
+  header { @apply flex flex-wrap items-center justify-between gap-4 bg-slate-900 p-4 text-white; }
+  nav { @apply flex flex-wrap items-center gap-4; }
+  h1 { @apply mb-4 text-2xl font-bold; }
+  h2 { @apply mb-2 text-lg font-semibold; }
+  a { @apply text-blue-700 underline; }
+  header a { @apply text-white; }
+  form { @apply grid gap-4; }
+  label { @apply grid gap-1 font-medium; }
+  input, textarea, select { @apply w-full rounded border border-slate-400 bg-white p-2 font-normal; }
+  button { @apply w-fit rounded bg-blue-700 px-4 py-2 text-white disabled:opacity-50; }
+}
+@layer components { .card { @apply my-4 rounded bg-white p-5 shadow; } }
