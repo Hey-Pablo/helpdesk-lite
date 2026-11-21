@@ -2,6 +2,8 @@
 
 > **Demonstração:** em breve
 
+## Status: implementado ✓
+
 Sistema de chamados com três papéis (solicitante, atendente e administrador), fluxo de status, comentários públicos e internos, prazo por prioridade (SLA) e painel de indicadores.
 
 ## O que prova
