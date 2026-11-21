@@ -3,7 +3,8 @@ import { useQuery } from '@tanstack/react-query';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '../lib/supabase';
 import type { Chamado } from '../features/chamados/tipos';
-import { podeTransicionar } from '../features/chamados/regras';
+import { prepararAtualizacao } from '../features/chamados/fila';
+import type { Status } from '../features/chamados/regras';
 
 // Busca todos os chamados (para equipe)
 async function listarFila(): Promise<Chamado[]> {
@@ -17,11 +18,12 @@ async function listarFila(): Promise<Chamado[]> {
 }
 
 // Atualiza o status de um chamado
-async function atualizarStatus(id: number, status: string, atendenteId: string | null) {
+async function atualizarStatus(id: number, atual: Status, status: Status, atendenteId: string | null) {
+  const atualizacao = prepararAtualizacao(atual, status, atendenteId);
   if (!supabase) throw new Error('Supabase não configurado');
   const { error } = await supabase
     .from('chamados')
-    .update({ status, atendente_id: atendenteId })
+    .update(atualizacao)
     .eq('id', id);
   if (error) throw error;
 }
@@ -31,8 +33,8 @@ export function Fila({ atendenteId }: { atendenteId: string | null }) {
   const { data: chamados, isLoading, error } = useQuery({ queryKey: ['fila'], queryFn: listarFila });
 
   const mutation = useMutation({
-    mutationFn: ({ id, status }: { id: number; status: string }) =>
-      atualizarStatus(id, status, atendenteId),
+    mutationFn: ({ id, atual, status }: { id: number; atual: Status; status: Status }) =>
+      atualizarStatus(id, atual, status, atendenteId),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['fila'] })
   });
 
@@ -61,6 +63,7 @@ export function Fila({ atendenteId }: { atendenteId: string | null }) {
   return (
     <main>
       <h1>Fila de atendimento</h1>
+      {mutation.isError && <p role="alert">Não foi possível atualizar o chamado.</p>}
       {chamados?.length === 0 && <p>Não há chamados na fila.</p>}
       {chamados?.map(c => (
         <article className="card" key={c.id}>
@@ -78,9 +81,12 @@ export function Fila({ atendenteId }: { atendenteId: string | null }) {
             <span>Prazo: {new Date(c.prazo_em).toLocaleString('pt-BR')}</span>
           </div>
           <div className="flex gap-2 mt-2">
+            <Link to={`/chamado/${c.id}`} className="text-sm text-blue-600">
+              Ver detalhes
+            </Link>
             {c.status === 'aberto' && (
               <button
-                onClick={() => mutation.mutate({ id: c.id, status: 'em_atendimento' })}
+                onClick={() => mutation.mutate({ id: c.id, atual: c.status, status: 'em_atendimento' })}
                 className="text-sm"
                 disabled={mutation.isPending}
               >
@@ -89,25 +95,15 @@ export function Fila({ atendenteId }: { atendenteId: string | null }) {
             )}
             {c.status === 'em_atendimento' && (
               <>
-                <Link to={`/chamado/${c.id}`} className="text-sm text-blue-600">
-                  Ver detalhes
-                </Link>
                 <button
-                  onClick={() => mutation.mutate({ id: c.id, status: 'aguardando_usuario' })}
+                  onClick={() => mutation.mutate({ id: c.id, atual: c.status, status: 'aguardando_usuario' })}
                   className="text-sm"
                   disabled={mutation.isPending}
                 >
                   Aguardar usuário
                 </button>
-              </>
-            )}
-            {c.status === 'aguardando_usuario' && (
-              <>
-                <Link to={`/chamado/${c.id}`} className="text-sm text-blue-600">
-                  Ver detalhes
-                </Link>
                 <button
-                  onClick={() => mutation.mutate({ id: c.id, status: 'resolvido' })}
+                  onClick={() => mutation.mutate({ id: c.id, atual: c.status, status: 'resolvido' })}
                   className="text-sm"
                   disabled={mutation.isPending}
                 >
@@ -115,20 +111,28 @@ export function Fila({ atendenteId }: { atendenteId: string | null }) {
                 </button>
               </>
             )}
+            {c.status === 'aguardando_usuario' && (
+              <>
+                <button
+                  onClick={() => mutation.mutate({ id: c.id, atual: c.status, status: 'em_atendimento' })}
+                  className="text-sm"
+                  disabled={mutation.isPending}
+                >
+                  Retomar atendimento
+                </button>
+              </>
+            )}
             {c.status === 'resolvido' && (
               <>
-                <Link to={`/chamado/${c.id}`} className="text-sm text-blue-600">
-                  Ver detalhes
-                </Link>
                 <button
-                  onClick={() => mutation.mutate({ id: c.id, status: 'fechado' })}
+                  onClick={() => mutation.mutate({ id: c.id, atual: c.status, status: 'fechado' })}
                   className="text-sm"
                   disabled={mutation.isPending}
                 >
                   Fechar
                 </button>
                 <button
-                  onClick={() => mutation.mutate({ id: c.id, status: 'reaberto' })}
+                  onClick={() => mutation.mutate({ id: c.id, atual: c.status, status: 'reaberto' })}
                   className="text-sm text-orange-600"
                   disabled={mutation.isPending}
                 >
@@ -138,11 +142,8 @@ export function Fila({ atendenteId }: { atendenteId: string | null }) {
             )}
             {c.status === 'reaberto' && (
               <>
-                <Link to={`/chamado/${c.id}`} className="text-sm text-blue-600">
-                  Ver detalhes
-                </Link>
                 <button
-                  onClick={() => mutation.mutate({ id: c.id, status: 'em_atendimento' })}
+                  onClick={() => mutation.mutate({ id: c.id, atual: c.status, status: 'em_atendimento' })}
                   className="text-sm"
                   disabled={mutation.isPending}
                 >

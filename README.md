@@ -2,7 +2,7 @@
 
 > **Demonstração:** em breve
 
-## Status: implementado ✓
+## Status: implementação em validação
 
 Sistema de chamados com três papéis (solicitante, atendente e administrador), fluxo de status, comentários públicos e internos, prazo por prioridade (SLA) e painel de indicadores.
 
@@ -47,7 +47,7 @@ helpdesk-lite/
 ### Para o atendente
 - **Fila de atendimento**: lista com ordenação por SLA (verde/amarelo/vermelho)
 - **Assumir chamado**: muda status de aberto para em atendimento
-- **Mudança de status**: fluxo completo (em atendimento → aguardando usuário → resolvido → fechado → reaberto)
+- **Mudança de status**: fluxo completo (em atendimento → aguardando usuário → em atendimento → resolvido → fechado → reaberto)
 - **Ver detalhes**: visualiza comentários e histórico
 
 ### Para o administrador
@@ -101,6 +101,13 @@ Execute o teste de RLS:
 ```bash
 psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f supabase/tests/rls.sql
 ```
+
+## O que o Pablo precisa testar
+
+1. Aplicar as migrations e o seed em um ambiente Supabase descartável.
+2. Executar `supabase/tests/rls.sql` com dois usuários e conferir o isolamento dos dados.
+3. Testar o login e os fluxos das três contas: solicitante, atendente e administrador.
+4. Fazer o deploy na Vercel e validar os fluxos no ambiente publicado.
 
 ## Testes automatizados
 
