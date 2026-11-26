@@ -131,7 +131,7 @@ function App() {
   useEffect(() => {
     if (!supabase) {
       setCarregando(false);
-      setErro('Configure VITE_SUPABASE_URL e VITE_SUPABASE_ANON_KEY no arquivo .env.');
+      setErro('Banco não conectado — configure VITE_SUPABASE_URL e VITE_SUPABASE_ANON_KEY no .env para usar o Supabase.');
       return;
     }
     let ativo = true;

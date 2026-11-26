@@ -130,8 +130,49 @@ npm test
 ```
 
 ```
- Run files  Tests  Coverage
-passed  3/3  5/5
+ Test Files  4 passed (4)
+      Tests  11 passed (11)
+```
+
+## Configurar o banco
+
+O projeto é **offline por padrão** - não requer banco hospedado para funcionar.
+
+### Opção 1: Usar no ambiente sem banco (recomendado para demonstração)
+
+1. Copie `.env.example` para `.env`
+2. Deixe as variáveis vazias ou preencha com valores fictícios
+3. Execute `npm run dev`
+4. O app mostrará: **"Banco não conectado — configure VITE_SUPABASE_URL e VITE_SUPABASE_ANON_KEY no .env para usar o Supabase"**
+
+### Opção 2: Supabase local (para testes avançados)
+
+1. Instale Supabase CLI e Docker
+2. Execute `supabase start`
+3. Aplique migrações: `supabase db push`
+4. Carregue o seed: `supabase db reset`
+5. Crie usuários no Supabase Auth eassocem aos perfis no seed
+6. Preencha `.env` com URL e chave do projeto local
+
+### Contas de demonstração
+
+| Papel | E-mail |Senha| Observação |
+|-------|--------|-----|------------|
+| Solicitante | solicitante@example.test | senha123 | Abre e acompanha chamados |
+| Atendente | atendente@example.test | senha123 | Gerencia fila e atende |
+| Administrador | admin@example.test | senha123 | Gerencia categorias e SLA |
+
+> **Nota:** As senhas acima funcionam apenas em ambiente local. Para testes reais, crie usuários no Supabase Auth eassocem-os aos perfis no seed.sql.
+
+### Testes de RLS
+
+Para validar as políticas de Row Level Security com PGlite local:
+
+```bash
+# Os testes RLS estão em tests/rls.test.ts
+# Para executar testes com banco real, use:
+supabase db reset
+psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f supabase/tests/rls.sql
 ```
 
 ## Decisões técnicas
