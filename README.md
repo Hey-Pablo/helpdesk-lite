@@ -2,7 +2,7 @@
 
 > **Demonstração:** em breve
 
-## Status: validado (CI passando)
+## Status: CI passando, aguardando validação RLS
 
 ![CI](https://github.com/Hey-Pablo/helpdesk-lite/actions/workflows/ci.yml/badge.svg)
 
@@ -124,8 +124,29 @@ npm test
 
 ```
  Test Files  4 passed (4)
-      Tests  11 passed | 1 skipped (12)
+      Tests  11 passed, 5 skipped (16 total)
 ```
+
+### Testes de Row Level Security (RLS)
+
+Os testes RLS que validam políticas de segurança no nível das linhas **não podem ser executados no CI** porque o PGlite (banco em memória usado nos testes) não suporta completamente:
+- `set_config`/`current_setting` entre queries
+- Funções `security_definer` com `auth.uid()`
+
+Para validar RLS localmente com Supabase CLI:
+
+```bash
+# 1. Iniciar Supabase local
+supabase start
+
+# 2. Resetar banco (aplica migrações e seed)
+supabase db reset
+
+# 3. Executar testes de RLS
+psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f supabase/tests/rls.sql
+```
+
+Os testes em `tests/rls.test.ts` têm blocos `it.skip` com instruções detalhadas para execução manual. Isso é necessário porque as políticas RLS do Supabase dependem de `auth.uid()` que lê `request.jwt.claim.sub` - mecanismo que não funciona no modo offline do PGlite.
 
 ## Configurar o banco
 
