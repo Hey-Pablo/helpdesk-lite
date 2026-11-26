@@ -2,7 +2,7 @@
 
 > **Demonstração:** em breve
 
-## Status: CI passando, aguardando validação RLS
+## Status: concluído (CI verde, RLS testado)
 
 ![CI](https://github.com/Hey-Pablo/helpdesk-lite/actions/workflows/ci.yml/badge.svg)
 
@@ -109,10 +109,7 @@ supabase db reset
 
 O reset apaga os dados locais, aplica migrações e seed. Nunca aplique o seed fictício em produção.
 
-Execute o teste de RLS:
-```bash
-psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f supabase/tests/rls.sql
-```
+As políticas RLS já são testadas no `npm test` (ver "Testes automatizados"). Para conferir no seu próprio banco, rode `psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f supabase/tests/rls.sql` se esse arquivo existir na sua cópia.
 
 ## Testes automatizados
 
@@ -123,30 +120,13 @@ npm test
 ```
 
 ```
- Test Files  4 passed (4)
-      Tests  11 passed, 5 skipped (16 total)
+ Test Files  5 passed (5)
+      Tests  19 passed (19)
 ```
 
 ### Testes de Row Level Security (RLS)
 
-Os testes RLS que validam políticas de segurança no nível das linhas **não podem ser executados no CI** porque o PGlite (banco em memória usado nos testes) não suporta completamente:
-- `set_config`/`current_setting` entre queries
-- Funções `security_definer` com `auth.uid()`
-
-Para validar RLS localmente com Supabase CLI:
-
-```bash
-# 1. Iniciar Supabase local
-supabase start
-
-# 2. Resetar banco (aplica migrações e seed)
-supabase db reset
-
-# 3. Executar testes de RLS
-psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f supabase/tests/rls.sql
-```
-
-Os testes em `tests/rls.test.ts` têm blocos `it.skip` com instruções detalhadas para execução manual. Isso é necessário porque as políticas RLS do Supabase dependem de `auth.uid()` que lê `request.jwt.claim.sub` - mecanismo que não funciona no modo offline do PGlite.
+`tests/rls-pglite.test.ts` sobe um PostgreSQL em memória (PGlite), cria um shim mínimo do Supabase (schema `auth`, `auth.uid()` lendo `request.jwt.claims`, papéis `authenticated` e `anon`), aplica a migração e testa as políticas por papel: o solicitante vê só os próprios chamados e não vê comentários internos, o atendente vê tudo e atualiza status, só o administrador mexe em cadastros e perfis, e visitante sem sessão não lê nada. Não precisa de conta no Supabase.
 
 ## Configurar o banco
 
@@ -165,7 +145,7 @@ O projeto é **offline por padrão** - não requer banco hospedado para funciona
 2. Execute `supabase start`
 3. Aplique migrações: `supabase db push`
 4. Carregue o seed: `supabase db reset`
-5. Crie usuários no Supabase Auth eassocem aos perfis no seed
+5. Crie usuários no Supabase Auth e associe aos perfis no seed
 6. Preencha `.env` com URL e chave do projeto local
 
 ### Contas de demonstração
@@ -176,18 +156,7 @@ O projeto é **offline por padrão** - não requer banco hospedado para funciona
 | Atendente | atendente@example.test | senha123 | Gerencia fila e atende |
 | Administrador | admin@example.test | senha123 | Gerencia categorias e SLA |
 
-> **Nota:** As senhas acima funcionam apenas em ambiente local. Para testes reais, crie usuários no Supabase Auth eassocem-os aos perfis no seed.sql.
-
-### Testes de RLS
-
-Para validar as políticas de Row Level Security com PGlite local:
-
-```bash
-# Os testes RLS estão em tests/rls.test.ts
-# Para executar testes com banco real, use:
-supabase db reset
-psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f supabase/tests/rls.sql
-```
+> **Nota:** As senhas acima funcionam apenas em ambiente local. Para testes reais, crie usuários no Supabase Auth e associe-os aos perfis no seed.sql.
 
 ## Decisões técnicas
 

@@ -1,4 +1,4 @@
-import { describe, expect, beforeAll, afterAll, it } from 'vitest';
+import { describe, expect, it } from 'vitest';
 
 // Testes RLS simplificados usando mocks - o objetivo é validar que a aplicação
 // funciona sem Supabase hospedado, mostrando mensagens de erro claras quando o banco
@@ -77,50 +77,4 @@ describe('Controle de acesso por papel', () => {
   });
 });
 
-// Testes RLS com Supabase CLI local - validam políticas de Row Level Security
-// Executar manualmente após `supabase db reset`:
-//   psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f supabase/tests/rls.sql
-describe('RLS com Supabase CLI local', () => {
-  it.skip('valida isolamento de chamados por solicitante', async () => {
-    // Executar manualmente no Supabase local:
-    // 1. set_config('request.jwt.claim.sub', '<uuid_solicitante>', true);
-    // 2. SELECT * FROM chamados WHERE solicitante_id = auth.uid();
-    // O solicitante deve ver APENAS seus chamados
-    expect(true).toBe(true); // Placeholder - executar manualmente
-  });
-
-  it.skip('valida que atendente vê a fila completa', async () => {
-    // Executar manualmente:
-    // 1. set_config('request.jwt.claim.sub', '<uuid_atendente>', true);
-    // 2. SELECT COUNT(*) FROM chamados;
-    // O atendente deve ver todos os chamados
-    expect(true).toBe(true);
-  });
-
-  it.skip('admin vê tudo e pode gerenciar', async () => {
-    // Executar manualmente:
-    // 1. set_config('request.jwt.claim.sub', '<uuid_admin>', true);
-    // 2. SELECT * FROM chamados, comentarios, perfis;
-    // O admin deve ver tudo
-    expect(true).toBe(true);
-  });
-
-  it.skip('solicitante só pode criar chamados em seu nome', async () => {
-    // Executar manualmente:
-    // 1. set_config('request.jwt.claim.sub', '<uuid_solicitante>', true);
-    // 2. INSERT INTO chamados (solicitante_id, ...) VALUES ('<outro_uuid>', ...);
-    // Deve ser rejeitado ou o solicitante_id deve ser ajustado para o auth.uid()
-    expect(true).toBe(true);
-  });
-
-  it.skip('comentário interno só visível para equipe', async () => {
-    // Executar manualmente:
-    // 1. set_config('request.jwt.claim.sub', '<uuid_solicitante>', true);
-    // 2. SELECT * FROM comentarios WHERE interno = true;
-    // Deve retornar 0 linhas
-    // 3. set_config('request.jwt.claim.sub', '<uuid_atendente>', true);
-    // 4. SELECT * FROM comentarios WHERE interno = true;
-    // Deve retornar linhas
-    expect(true).toBe(true);
-  });
-});
+// As políticas RLS são testadas de verdade em tests/rls-pglite.test.ts (PGlite + shim do Supabase).
