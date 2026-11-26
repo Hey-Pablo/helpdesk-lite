@@ -114,13 +114,6 @@ Execute o teste de RLS:
 psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f supabase/tests/rls.sql
 ```
 
-## O que o Pablo precisa testar
-
-1. Aplicar as migrations e o seed em um ambiente Supabase descartável.
-2. Executar `supabase/tests/rls.sql` com dois usuários e conferir o isolamento dos dados.
-3. Testar o login e os fluxos das três contas: solicitante, atendente e administrador.
-4. Fazer o deploy na Vercel e validar os fluxos no ambiente publicado.
-
 ## Testes automatizados
 
 Os testes cobrem regras de transição de status, políticas de acesso e preparação de atualização da fila:
@@ -131,7 +124,7 @@ npm test
 
 ```
  Test Files  4 passed (4)
-      Tests  11 passed (11)
+      Tests  11 passed | 1 skipped (12)
 ```
 
 ## Configurar o banco
