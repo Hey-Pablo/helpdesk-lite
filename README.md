@@ -2,7 +2,9 @@
 
 > **Demonstração:** em breve
 
-## Status: implementação em validação
+## Status: validado (CI passando)
+
+![CI](https://github.com/Hey-Pablo/helpdesk-lite/actions/workflows/ci.yml/badge.svg)
 
 Sistema de chamados com três papéis (solicitante, atendente e administrador), fluxo de status, comentários públicos e internos, prazo por prioridade (SLA) e painel de indicadores.
 
@@ -74,6 +76,16 @@ npm test   # Testes com Vitest
 npm run build  # Verifica compilação
 ```
 
+## Integração contínua (CI)
+
+O projeto possui pipeline de CI no GitHub Actions (`.github/workflows/ci.yml`) que executa em todo push e pull request para a branch `main`:
+
+1. **TypeScript check** (`npx tsc --noEmit`) — verifica tipos sem emitir arquivos
+2. **Testes** (`npm test`) — executa suíte Vitest (3 arquivos, 5 testes)
+3. **Build** (`npm run build`) — compila para produção com Vite
+
+O badge do CI está no topo do README e reflete o status da última execução.
+
 ## Contas de demonstração
 
 | Papel | E-mail |Senha| Observação |
@@ -111,7 +123,7 @@ psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f supabase/tests/rls.sql
 
 ## Testes automatizados
 
-Os testes cobrem regras de transição de status e políticas de acesso:
+Os testes cobrem regras de transição de status, políticas de acesso e preparação de atualização da fila:
 
 ```bash
 npm test
@@ -119,7 +131,7 @@ npm test
 
 ```
  Run files  Tests  Coverage
-passed  2/2  3/3
+passed  3/3  5/5
 ```
 
 ## Decisões técnicas
