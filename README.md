@@ -2,7 +2,9 @@
 
 > **Demonstração:** em breve
 
-## Status: implementação em validação
+## Status: concluído (CI verde, RLS testado)
+
+![CI](https://github.com/Hey-Pablo/helpdesk-lite/actions/workflows/ci.yml/badge.svg)
 
 Sistema de chamados com três papéis (solicitante, atendente e administrador), fluxo de status, comentários públicos e internos, prazo por prioridade (SLA) e painel de indicadores.
 
@@ -74,6 +76,16 @@ npm test   # Testes com Vitest
 npm run build  # Verifica compilação
 ```
 
+## Integração contínua (CI)
+
+O projeto possui pipeline de CI no GitHub Actions (`.github/workflows/ci.yml`) que executa em todo push e pull request para a branch `main`:
+
+1. **TypeScript check** (`npx tsc --noEmit`) — verifica tipos sem emitir arquivos
+2. **Testes** (`npm test`) — executa suíte Vitest (3 arquivos, 5 testes)
+3. **Build** (`npm run build`) — compila para produção com Vite
+
+O badge do CI está no topo do README e reflete o status da última execução.
+
 ## Contas de demonstração
 
 | Papel | E-mail |Senha| Observação |
@@ -97,30 +109,54 @@ supabase db reset
 
 O reset apaga os dados locais, aplica migrações e seed. Nunca aplique o seed fictício em produção.
 
-Execute o teste de RLS:
-```bash
-psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f supabase/tests/rls.sql
-```
-
-## O que o Pablo precisa testar
-
-1. Aplicar as migrations e o seed em um ambiente Supabase descartável.
-2. Executar `supabase/tests/rls.sql` com dois usuários e conferir o isolamento dos dados.
-3. Testar o login e os fluxos das três contas: solicitante, atendente e administrador.
-4. Fazer o deploy na Vercel e validar os fluxos no ambiente publicado.
+As políticas RLS já são testadas no `npm test` (ver "Testes automatizados"). Para conferir no seu próprio banco, rode `psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f supabase/tests/rls.sql` se esse arquivo existir na sua cópia.
 
 ## Testes automatizados
 
-Os testes cobrem regras de transição de status e políticas de acesso:
+Os testes cobrem regras de transição de status, políticas de acesso e preparação de atualização da fila:
 
 ```bash
 npm test
 ```
 
 ```
- Run files  Tests  Coverage
-passed  2/2  3/3
+ Test Files  5 passed (5)
+      Tests  19 passed (19)
 ```
+
+### Testes de Row Level Security (RLS)
+
+`tests/rls-pglite.test.ts` sobe um PostgreSQL em memória (PGlite), cria um shim mínimo do Supabase (schema `auth`, `auth.uid()` lendo `request.jwt.claims`, papéis `authenticated` e `anon`), aplica a migração e testa as políticas por papel: o solicitante vê só os próprios chamados e não vê comentários internos, o atendente vê tudo e atualiza status, só o administrador mexe em cadastros e perfis, e visitante sem sessão não lê nada. Não precisa de conta no Supabase.
+
+## Configurar o banco
+
+O projeto é **offline por padrão** - não requer banco hospedado para funcionar.
+
+### Opção 1: Usar no ambiente sem banco (recomendado para demonstração)
+
+1. Copie `.env.example` para `.env`
+2. Deixe as variáveis vazias ou preencha com valores fictícios
+3. Execute `npm run dev`
+4. O app mostrará: **"Banco não conectado — configure VITE_SUPABASE_URL e VITE_SUPABASE_ANON_KEY no .env para usar o Supabase"**
+
+### Opção 2: Supabase local (para testes avançados)
+
+1. Instale Supabase CLI e Docker
+2. Execute `supabase start`
+3. Aplique migrações: `supabase db push`
+4. Carregue o seed: `supabase db reset`
+5. Crie usuários no Supabase Auth e associe aos perfis no seed
+6. Preencha `.env` com URL e chave do projeto local
+
+### Contas de demonstração
+
+| Papel | E-mail |Senha| Observação |
+|-------|--------|-----|------------|
+| Solicitante | solicitante@example.test | senha123 | Abre e acompanha chamados |
+| Atendente | atendente@example.test | senha123 | Gerencia fila e atende |
+| Administrador | admin@example.test | senha123 | Gerencia categorias e SLA |
+
+> **Nota:** As senhas acima funcionam apenas em ambiente local. Para testes reais, crie usuários no Supabase Auth e associe-os aos perfis no seed.sql.
 
 ## Decisões técnicas
 
