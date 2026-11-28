@@ -1,6 +1,8 @@
 # Help Desk Lite
 
-> **Demonstração:** em breve
+![Demo](docs/demo.gif)
+
+> **Demonstração:** Contas de exemplo disponíveis
 
 ## Status: concluído (CI verde, RLS testado)
 
@@ -15,6 +17,32 @@ Aplicação completa com autenticação, regras de acesso no banco, modelagem e 
 ## Stack
 
 React, TypeScript, Vite, Tailwind CSS, React Router e TanStack Query. Supabase (Auth, PostgreSQL e RLS). Vitest e Testing Library. Vercel.
+
+## Telas
+
+### Login
+
+![Login](docs/img/1-login.png)
+
+### Meus Chamados (Solicitante)
+
+![Meus Chamados](docs/img/2-meus-chamados-solicitante.png)
+
+### Novo Chamado
+
+![Novo Chamado](docs/img/3-novo-chamado.png)
+
+### Fila de Atendimento (Atendente)
+
+![Fila](docs/img/4-fila-atendente.png)
+
+### Painel de Administração
+
+![Admin](docs/img/5-admin.png)
+
+### Detalhe do Chamado
+
+![Chamado Detalhe](docs/img/6-chamado-detalhe.png)
 
 ## Estrutura
 
@@ -186,4 +214,4 @@ O projeto é **offline por padrão** - não requer banco hospedado para funciona
 
 ## Autor
 
-Pablo Dilio · [Portfólio](https://hey-pablo.github.io/pablo-dilio-portfolio/) · [LinkedIn](https://www.linkedin.com/in/pablo-dilio-4063991b2)
+Pablo Dilio · [Portfólio](https://hey-pablo.github.io/pablo-dilio-portfolio/) · [LinkedIn](https://www.linkedin.com/in/pablo-dilio-4063991b2/)
